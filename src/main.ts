@@ -1,37 +1,33 @@
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js"
+import { Client, GatewayIntentBits, GuildMember, IntentsBitField, InteractionCollector, Message, REST, Routes, SlashCommandBuilder } from "discord.js"
 import * as dotenv from 'dotenv'
+import Controller from "./Controller"
+import Info from "./Extensions/InfoExtension"
+import Command from "./Model/Commands"
+import { idText } from "typescript"
+
 dotenv.config()
 
-
 const main = async (): Promise<void> => {
-    const commands = [
-        {
-            name: 'ping',
-            description: 'Replies with Pong!',
-        },
-    ];
-    if (!process.env.TOKEN) return;
-    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-    const client = new Client({ intents: [GatewayIntentBits.Guilds] })
-
-    client.on('ready', async () => {
-
+    let controller: Controller<Command> | undefined
+    const myIntents = new IntentsBitField();
+    myIntents.add(
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+        );
+    const client = new Client({ intents: myIntents })
+    client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
-        console.log('Started refreshing application (/) commands.');
-        if(!client.user?.id) return;
-        await rest.put(Routes.applicationCommands(client.user?.id), { body: commands });
+        client.user?.setUsername("Bonsay")
+        controller = client?.user?.id ? new Controller(client.user.id) : undefined;
+        controller?.Plug(new Info())
 
-        console.log('Successfully reloaded application (/) commands.');
+    })
 
-    });
-
-    client.on('interactionCreate', async interaction => {
-        if (!interaction.isChatInputCommand()) return;
-
-        if (interaction.commandName === 'ping') {
-            await interaction.reply('Pong!');
-        }
-    });
+    client.on('messageCreate', async message => {
+       controller?.execute(message)
+    })
 
     client.login(process.env.TOKEN)
 }
