@@ -5,4 +5,5 @@ export interface ICommand {
     description: string
     method: Function
     types: CommandType[]
+    options?: []
 }
