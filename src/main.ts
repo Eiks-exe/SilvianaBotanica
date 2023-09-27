@@ -2,13 +2,13 @@ import { Client, GatewayIntentBits, GuildMember, IntentsBitField, InteractionCol
 import * as dotenv from 'dotenv'
 import Controller from "./Controller"
 import Info from "./Extensions/InfoExtension"
-import Command from "./Model/Commands"
 import { readdirSync } from "fs"
+import { ICommand } from "./Interfaces/commands"
 
 dotenv.config()
 
 const main = async (): Promise<void> => {
-    let controller: Controller<Command> | undefined
+    let controller: Controller<ICommand> | undefined
     const myIntents = new IntentsBitField();
     myIntents.add(
         GatewayIntentBits.Guilds,
@@ -23,8 +23,8 @@ const main = async (): Promise<void> => {
         const extensionFile = readdirSync('./src/Extensions', {withFileTypes: true}).filter(file => file.isDirectory())
         extensionFile.forEach(async  (file) => {
             const extension = await import(`./Extensions/${file.name}`)
-            const instance = new extension.default()
-            controller?.Plug(instance)
+            controller?.Plug(extension.default)
+            console.log(extension)    
         })
 
     })

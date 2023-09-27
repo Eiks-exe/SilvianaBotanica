@@ -1,22 +1,19 @@
-import Command from "../../Model/Commands";
+import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "../extensionModel";
 import { Interaction, Message} from "discord.js";
 
 type EventType = Interaction | Message
 
 
-export default class Info extends ExtensionModel<Command>{
-   
-    private ping: Command = new Command('ping', 'pong',["message", "slash"] , async (event : EventType , query: [])=>{
-        event instanceof Message ? event.reply('pong') : event.isChatInputCommand() ? event.reply("pong") : null ;
-    })
-    private time: Command = new Command('time', 'Get current time', ["message"], () => {
-        console.log(new Date().toString())
-    })
-    
-    constructor(){
-        super("info");
-        this.register(this.ping)
-        this.register(this.time)
+const ping = (event: EventType, query:[])=>{
+    event instanceof Message ? event.reply('pong') : event.isChatInputCommand() ? event.reply("pong") : null ;
+}
+
+const Info: ExtensionModel<ICommand> = {
+    name: "Info",
+    commands: {
+        ping: {id : "ping", description: "ping pong", types: ["CHAT", "SLASH"], method: ping}
     }
 }
+
+export default Info

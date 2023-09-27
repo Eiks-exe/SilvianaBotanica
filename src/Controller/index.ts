@@ -1,6 +1,5 @@
 import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "src/Extensions/extensionModel";
-import Command from "src/Model/Commands";
 import { EventType } from "src/Interfaces/Interfaces";
 import { 
     Client, 
@@ -10,7 +9,7 @@ import {
     Interaction, 
 } from "discord.js";
 
-interface IController<T extends Command> {
+interface IController<T extends ICommand> {
     Plug(extension: ExtensionModel<T>): void;
     execute(event: EventType): void;
 }
@@ -36,18 +35,18 @@ export default class Controller<T extends ICommand> implements IController<T> {
     private clientId: string;
 
     /** The list of commands. */
-    private commands: Command[]
+    private commands: ICommand[]
 
 
     /** The list of extensions. */
-    private extensions: ExtensionModel<T>[];
+    private extensions: ExtensionModel<ICommand>[];
 
     /**
      * Collects the extension.
      * @param {ExtensionModel<T>} extension - The extension to collect.
      * @returns {Promise<string>} - A promise that resolves with a success message or rejects with an error message.
      */
-    private collectExtension = (extension: ExtensionModel<T>): Promise<string> => {
+    private collectExtension = (extension: ExtensionModel<ICommand>): Promise<string> => {
         return new Promise((resolve, reject) => {
             try {
                 this.extensions.push(extension)
@@ -64,17 +63,20 @@ export default class Controller<T extends ICommand> implements IController<T> {
      * Plugs the extension.
      * @param {ExtensionModel<T>} extension - The extension to plug.
      */
-    public Plug(extension: ExtensionModel<T>): void {
+    public Plug(extension: ExtensionModel<ICommand>): void {
         const token = process.env.TOKEN;
         if(token === undefined) throw new Error("TOKEN is undefined")
         const rest = new REST({ version: '10' }).setToken(token);
-
-        extension.list((command: Command) => {
+        console.log(extension.name)
+    
+        const commands = Object.values(extension.commands)
+        commands.forEach((command: ICommand) => {
             this.commands.push(command)
-            console.log(command.id, command.description);
         })
+        
+        
         if (this.client.user?.id === undefined) throw new Error("client.user.id is undefined")
-        const slashCommands = this.commands.filter((command: ICommand) => command.types.includes("slash"))
+    const slashCommands = this.commands.filter((command: ICommand) => command.types.includes("SLASH"))
         const slashCommandBody = slashCommands.map((command : ICommand ) => {
             return { name : command.id, description: command.description, options: command.options ? command.options : []}
         })
