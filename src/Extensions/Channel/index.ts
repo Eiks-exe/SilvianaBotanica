@@ -2,6 +2,7 @@ import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "../extensionModel";
 import { CategoryCreateChannelOptions, ChannelType, GuildChannel, GuildChannelCreateOptions, Interaction } from "discord.js";
 import { randomInt } from "crypto";
+import { channel } from "diagnostics_channel";
 
 type EventType = Interaction;
 
@@ -36,7 +37,7 @@ const create = (event: Interaction, query:[])=>{
 }
 
 
-const Info: ExtensionModel<ICommand> = {
+const Channel: ExtensionModel<ICommand> = {
     name: "Info",
     commands: {
         ping: {id : "channel-create", description: "create a channel", types: ["CHAT", "SLASH"], method: create, options: [
@@ -54,4 +55,4 @@ const Info: ExtensionModel<ICommand> = {
     }
 }
 
-export default Info
+export default Channel
