@@ -42,12 +42,12 @@ const Channel: ExtensionModel<ICommand> = {
     commands: {
         ping: {id : "channel-create", description: "create a channel", types: ["CHAT", "SLASH"], method: create, options: [
             {
-                name: "name",
+                name: "channel name",
                 description: "The name of the channel",
                 type: 3,
             },
             {
-                name: "users",
+                name: "guest",
                 description: "The users to give access to the channel",
                 type: 6,
             },
