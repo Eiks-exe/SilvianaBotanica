@@ -1,25 +1,52 @@
 import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "src/Extensions/extensionModel";
-import Command from "src/Model/Commands";
 import { EventType } from "src/Interfaces/Interfaces";
-import { Client, Message } from "discord.js";
+import { 
+    Client, 
+    Message,
+    REST,
+    Routes,
+    Interaction, 
+} from "discord.js";
 
-interface IController<T extends Command> {
+interface IController<T extends ICommand> {
     Plug(extension: ExtensionModel<T>): void;
     execute(event: EventType): void;
 }
 
+/**
+ * Controller class that implements the IController interface.
+ * @template T - The type of the command.
+ */
 export default class Controller<T extends ICommand> implements IController<T> {
-    constructor(clientId: string) {
+    /**
+     * Creates an instance of Controller.
+     * @param {string} clientId - The client ID.
+     */
+    constructor(client:Client, clientId: string) {
+        this.client = client;
         this.clientId = clientId;
         this.commands = [];
         this.extensions = [];
     }
-    private clientId: string;
-    private commands: Command[]
-    private extensions: ExtensionModel<T>[];
 
-    private collectExtension = (extension: ExtensionModel<T>) => {
+    private client: Client;
+    /** The client ID. */
+    private clientId: string;
+
+    /** The list of commands. */
+    private commands: ICommand[]
+
+
+    /** The list of extensions. */
+    private extensions: ExtensionModel<ICommand>[];
+
+    /**
+     * Collects the extension.
+     * @param {ExtensionModel<T>} extension - The extension to collect.
+     * @returns {Promise<string>} - A promise that resolves with a success message or rejects with an error message.
+     */
+    private collectExtension = (extension: ExtensionModel<ICommand>): Promise<string> => {
         return new Promise((resolve, reject) => {
             try {
                 this.extensions.push(extension)
@@ -31,17 +58,44 @@ export default class Controller<T extends ICommand> implements IController<T> {
         })
 
     }
-    public Plug(extension: ExtensionModel<T>): void {
-        extension.list((command: Command) => {
-            this.commands.push(command);
-            console.log(command.id, command.description);
-        })
 
-        this.collectExtension(extension)
-            .then(response => console.log(`${extension.name} : ${response}`))
+    /**
+     * Plugs the extension.
+     * @param {ExtensionModel<T>} extension - The extension to plug.
+     */
+    public Plug(extension: ExtensionModel<ICommand>): void {
+        const token = process.env.TOKEN;
+        if(token === undefined) throw new Error("TOKEN is undefined")
+        const rest = new REST({ version: '10' }).setToken(token);
+        console.log(extension.name)
+    
+        const commands = Object.values(extension.commands)
+        commands.forEach((command: ICommand) => {
+            this.commands.push(command)
+        })
+        
+        
+        if (this.client.user?.id === undefined) throw new Error("client.user.id is undefined")
+    const slashCommands = this.commands.filter((command: ICommand) => command.types.includes("SLASH"))
+        const slashCommandBody = slashCommands.map((command : ICommand ) => {
+            return { name : command.id, description: command.description, options: command.options ? command.options : []}
+        })
+        console.log(slashCommandBody)
+        console.log (this.commands)
+        rest.put(Routes.applicationCommands(this.client.user?.id), { body: slashCommandBody })
+            .then(() => {
+                this.collectExtension(extension)
+                    .then(response => console.log(`${extension.name} : ${response}`))
+                    .catch(error => console.error(`${extension.name} : ${error}`))
+            })
             .catch(error => console.error(`${extension.name} : ${error}`))
     }
 
+
+    /**
+     * @description Executes the command.
+     * @param {Message} message - The message object.
+     */
     public execute(message: Message) {
         try {
             const clientIdRegex: any = this.clientId ? new RegExp(`^(<@!?${this.clientId})>`) : (process.env.PREFIX);
@@ -52,6 +106,16 @@ export default class Controller<T extends ICommand> implements IController<T> {
             console.log("payload:", cltId, command, query)
             const cmd = this.commands.find((cmd)=> cmd.id === command)
             cmd?.method(message, query)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    public executeSlash(interaction: Interaction) {
+        try {
+            if (!interaction.isCommand()) return;
+            console.log(interaction.commandName)
+            const command = this.commands.find((cmd)=> cmd.id === interaction.commandName)
+            command?.method(interaction, interaction.options)
         } catch (error) {
             console.error(error)
         }

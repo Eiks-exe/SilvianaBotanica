@@ -2,13 +2,13 @@ import { Client, GatewayIntentBits, GuildMember, IntentsBitField, InteractionCol
 import * as dotenv from 'dotenv'
 import Controller from "./Controller"
 import Info from "./Extensions/InfoExtension"
-import Command from "./Model/Commands"
-import { idText } from "typescript"
+import { readdirSync } from "fs"
+import { ICommand } from "./Interfaces/commands"
 
 dotenv.config()
 
 const main = async (): Promise<void> => {
-    let controller: Controller<Command> | undefined
+    let controller: Controller<ICommand> | undefined
     const myIntents = new IntentsBitField();
     myIntents.add(
         GatewayIntentBits.Guilds,
@@ -19,15 +19,24 @@ const main = async (): Promise<void> => {
     const client = new Client({ intents: myIntents })
     client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
-        client.user?.setUsername("Bonsay")
-        controller = client?.user?.id ? new Controller(client.user.id) : undefined;
-        controller?.Plug(new Info())
+        controller = client?.user?.id ? new Controller(client, client.user.id) : undefined;
+        const extensionFile = readdirSync('./src/Extensions', {withFileTypes: true}).filter(file => file.isDirectory())
+        extensionFile.forEach(async  (file) => {
+            const extension = await import(`./Extensions/${file.name}`)
+            controller?.Plug(extension.default)
+            console.log(extension)    
+        })
 
     })
 
     client.on('messageCreate', async message => {
        controller?.execute(message)
     })
+
+    client.on('interactionCreate', async interaction => {
+        if (!interaction.isChatInputCommand()) return;
+        controller?.executeSlash(interaction)
+     })
 
     client.login(process.env.TOKEN)
 }
