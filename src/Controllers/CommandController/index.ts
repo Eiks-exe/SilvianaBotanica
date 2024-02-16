@@ -23,6 +23,7 @@ export default class Controller<T extends ICommand> implements IController<T> {
      * Creates an instance of Controller.
      * @param {string} clientId - The client ID.
      */
+    
     constructor(client:Client, clientId: string) {
         this.client = client;
         this.clientId = clientId;

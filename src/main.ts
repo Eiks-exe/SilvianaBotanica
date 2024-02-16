@@ -1,7 +1,6 @@
-import { Client, GatewayIntentBits, GuildMember, IntentsBitField, InteractionCollector, Message, REST, Routes, SlashCommandBuilder } from "discord.js"
+import { Client, GatewayIntentBits, IntentsBitField } from "discord.js"
 import * as dotenv from 'dotenv'
-import Controller from "./Controller"
-import Info from "./Extensions/InfoExtension"
+import Controller from "./Controllers/CommandController"
 import { readdirSync } from "fs"
 import { ICommand } from "./Interfaces/commands"
 
@@ -17,6 +16,7 @@ const main = async (): Promise<void> => {
         GatewayIntentBits.GuildMembers,
         );
     const client = new Client({ intents: myIntents })
+    
     client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
         controller = client?.user?.id ? new Controller(client, client.user.id) : undefined;
