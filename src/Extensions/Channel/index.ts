@@ -10,10 +10,10 @@ type EventType = Interaction;
 const create = (event: Interaction, query:[])=>{
    if(!event.isCommand()) return;
     const channelName = event.options.get("name")?.value?.toString()
-    const usersID = event.options.get("users")?.user?.id
+    const guestID = event.options.get("guest")?.user?.id
     const everyoneRole = event.guild?.roles.everyone
     if(!everyoneRole) return;
-    if( typeof(usersID) !== "string" )return;
+    if( typeof(guestID) !== "string" )return;
     const options: GuildChannelCreateOptions = {
         name: channelName ? channelName : `channel-${randomInt(1000)}`,
         type: ChannelType.GuildText,
@@ -27,22 +27,23 @@ const create = (event: Interaction, query:[])=>{
                 allow: ["ViewChannel"]
             },
             {
-                id: usersID,
+                id: guestID,
                 allow: ["ViewChannel"]
             }
         ]
     }
-    event.reply("test channel" + channelName)
-    event.guild?.channels.create(options)
+    event.guild?.channels.create(options).then((channel: GuildChannel) => {
+        
+    })
+    
 }
 
-
 const Channel: ExtensionModel<ICommand> = {
-    name: "Info",
+    name: "Channel",
     commands: {
-        ping: {id : "channel-create", description: "create a channel", types: ["CHAT", "SLASH"], method: create, options: [
+        channelCreate : {id : "channel-create", description: "create a channel", types: ["CHAT", "SLASH"], method: create, options: [
             {
-                name: "channel name",
+                name: "name",
                 description: "The name of the channel",
                 type: 3,
             },

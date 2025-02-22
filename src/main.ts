@@ -17,6 +17,7 @@ const main = async (): Promise<void> => {
         GatewayIntentBits.GuildMembers,
         );
     const client = new Client({ intents: myIntents })
+    
     client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
         controller = client?.user?.id ? new Controller(client, client.user.id) : undefined;
@@ -30,7 +31,8 @@ const main = async (): Promise<void> => {
     })
 
     client.on('messageCreate', async message => {
-       controller?.execute(message)
+        console.log(message)
+        controller?.execute(message)
     })
 
     client.on('interactionCreate', async interaction => {

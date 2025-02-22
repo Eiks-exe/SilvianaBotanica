@@ -80,8 +80,6 @@ export default class Controller<T extends ICommand> implements IController<T> {
         const slashCommandBody = slashCommands.map((command : ICommand ) => {
             return { name : command.id, description: command.description, options: command.options ? command.options : []}
         })
-        console.log(slashCommandBody)
-        console.log (this.commands)
         rest.put(Routes.applicationCommands(this.client.user?.id), { body: slashCommandBody })
             .then(() => {
                 this.collectExtension(extension)
