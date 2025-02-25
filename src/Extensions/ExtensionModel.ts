@@ -30,10 +30,12 @@ export class ExtensionModel<T> implements IExtension<T> {
 
     register = (id:string, command: T) => {
         this.commands.set(id, command);
+        console.log(`Command ${id} registered`);
     }
 
     unregister = (id:string) => {   
         this.commands.has(id) ? this.commands.delete(id) : console.error(`Command ${id} not found`);
+        console.log(`Command ${id} unregistered`);  
     }
 
     get = (id:string) : T => {

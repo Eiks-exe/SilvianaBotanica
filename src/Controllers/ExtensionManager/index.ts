@@ -56,24 +56,37 @@ class ExtensionManager {
         });
     }
 
-    private LoadExtension = (extension : any, name : string) => {
-        const rest = new REST({ version: '10' }).setToken(this.config.token);
-        /* const ext : IExtension<ICommand> = new extension[name]();
+    private LoadExtension = async (extension : any, name : string) => {
+        const ext : IExtension<ICommand> = new extension[name]();
         ext.init();
         console.log(`Extension ${ext.name} loaded`);
         console.log(`Commands: ${Array.from(ext.list().keys())}`);
         this.extensions.push(ext);
         ext.list().forEach((command) => {
-            this.commands.type.contains("SLASH") ? this.LoadInteraction(command) : continue;
             this.commands.push(command);
             console.log(`Command ${command.id} loaded`);    
-        }); */
-        
+        });
+        this.LoadSlashCommands();
     };
     
-    LoadInteraction = (interaction: Interaction) => {
-        
-       
+    private LoadSlashCommands = () => {
+        console.log("Loading slash commands...");
+        const rest = new REST({ version: '10' }).setToken(this.config.token);
+        const slashCommands = this.commands.filter((command) => command.types.includes("SLASH"));
+        slashCommands.forEach(async (command) => {
+            const  newCommand = {name: command.id, description: command.description, options: command.options};
+            try {
+                console.log(`Attempting to register command ${command.id}`);
+                await rest.put(
+                    Routes.applicationGuildCommands(this.config.clientDiscord.user?.id as string, "guild_id"),
+                    { body: newCommand },
+                );
+                console.log(`Command ${command.id} registered as a (/) command`);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+        console.log("Slash commands loaded", slashCommands);
     }
 
     execute(message: Message) {
@@ -86,11 +99,13 @@ class ExtensionManager {
         }
     }
 
-    executeInteraction(Interaction: Interaction) {
+    executeSlash(interaction: Interaction) {
         try {
-            const client = this.config.clientDiscord;
-            console.log("command requested", Interaction);
-            console.log(client.user?.id, client.user?.discriminator); 
+            if (!interaction.isCommand()) return;
+            console.log("command requested", interaction.commandName);
+            this.commands.filter((command) => command.id === interaction.commandName).forEach((command) => {
+                command.execute(interaction);
+            });
         }  catch (error) {
             throw new Error((error as Error).message);
         }

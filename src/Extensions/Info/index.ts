@@ -21,10 +21,6 @@ export class Info extends ExtensionModel<ICommand> {
                 }
             }
         });
-        // log all the loaded commands
-        this.commands.forEach((command, key) => {
-            console.log(`Command ${key} loaded`);
-        });
     }
 }
 
