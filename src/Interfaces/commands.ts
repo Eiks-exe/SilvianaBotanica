@@ -8,7 +8,7 @@ export interface ICommand {
     id: string
     description: string
     types: CommandType[]
-    method: Function
+    execute: Function
     options?: commandOption[]
 }
 
