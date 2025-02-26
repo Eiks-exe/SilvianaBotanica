@@ -23,8 +23,8 @@ interface Ipluglin {
 }
 
 interface Iconfig {
+    client: Client;
     token: string;
-    clientDiscord: Client;
     prefix: string;
     ExtDir: string;
 }
@@ -32,29 +32,37 @@ interface Iconfig {
 class ExtensionManager {
     commands: ICommand[];
     extensions: IExtension<ICommand>[]; 
-    constructor(private config: Iconfig) {
+    clientDiscord: Client
+    constructor(private config: Iconfig ,) {
         this.config = config;
         this.extensions = [];
         this.commands = [];
+        this.clientDiscord = config.client;
     }
 
     public init = async (): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            try {
-                const extensionFile = readdirSync(`${this.config.ExtDir}/`, {
-                    withFileTypes: true,
-                }).filter((file) => file.isDirectory())
-                extensionFile.forEach(async (file) => {
-                    console.log(`attempting to load ${file.name}`); 
-                    const extension = await import(this.config.ExtDir + `/${file.name}`);
-                    this.LoadExtension(extension, file.name);
-                })
-                resolve("Extensions loaded");
-            } catch (error) {
-                reject(error);
+        console.log("Initializing Extension Manager...");
+        try {
+            if (!this.clientDiscord.user || !this.clientDiscord.user.id) {
+                throw new Error("Client not initialized");
             }
-        });
+            const extPath = this.config.ExtDir;
+            const extFiles = readdirSync(extPath, { withFileTypes: true }).filter((file) => file.isDirectory());
+            extFiles.forEach(async (file) => {
+                const extension = await import(path.join(extPath, file.name));
+                console.log(`Loading extension ${file.name}, ${extension}`);
+                const ext = new extension[file.name]();
+                this.LoadExtension(extension, file.name);
+            });
+          
+            return "Extension Manager initialized";
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
     }
+
+    
+   
 
     private LoadExtension = async (extension : any, name : string) => {
         const ext : IExtension<ICommand> = new extension[name]();
@@ -69,18 +77,18 @@ class ExtensionManager {
         this.LoadSlashCommands();
     };
     
-    private LoadSlashCommands = () => {
+    private  LoadSlashCommands = async () => {
         console.log("Loading slash commands...");
         const rest = new REST({ version: '10' }).setToken(this.config.token);
         const slashCommands = this.commands.filter((command) => command.types.includes("SLASH"));
         slashCommands.forEach(async (command) => {
-            const  newCommand = {name: command.id, description: command.description, options: command.options};
+            const  newCommand = {name: command.id, description: command.description};
             try {
                 console.log(`Attempting to register command ${command.id}`);
                 await rest.put(
-                    Routes.applicationGuildCommands(this.config.clientDiscord.user?.id as string, "guild_id"),
+                    Routes.applicationCommands(this.clientDiscord.user?.id as string),
                     { body: newCommand },
-                );
+                ).then((res)=>{console.log(res)});
                 console.log(`Command ${command.id} registered as a (/) command`);
             } catch (error) {
                 console.error(error);
@@ -91,9 +99,12 @@ class ExtensionManager {
 
     execute(message: Message) {
         try {
-            const client = this.config.clientDiscord;
-            console.log("command requested", message.content);
-            console.log(client.user?.id, client.user?.discriminator); 
+            if (message.author.bot) return;
+            if (!message.content.startsWith(this.config.prefix)) return;
+            const [command, ...args] = message.content.slice(this.config.prefix.length).split(" ");
+            this.commands.filter((cmd) => cmd.id === command).forEach((cmd) => {
+                cmd.execute(message, args);
+            });
         }  catch (error) {
             throw new Error((error as Error).message);
         }

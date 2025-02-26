@@ -12,7 +12,7 @@ export class Info extends ExtensionModel<ICommand> {
         this.register("info", {
             id: "info",
             description: "Get info about the bot",
-            types: ["MESSAGE"],
+            types: ["MESSAGE", "SLASH"],
             execute: async (message: Message) => {
                 try {
                     message.reply(`Bot name: ${message.client.user?.username}`);

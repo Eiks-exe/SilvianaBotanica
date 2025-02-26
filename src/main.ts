@@ -18,35 +18,39 @@ dotenv.config();
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.MessageContent,
     );
-    const client = new Client({ intents: myIntents });
+    const client : Client = new Client({ intents: myIntents });
     const extPath = path.join(__dirname, "Extensions");
     const token = process.env.TOKEN;
-    if (!token) throw new Error("Token undefined");
+    if (!token || !client) {
+        throw new Error("Token or client not found");
+    }
     
     const config = {
+        client: client,
         token: token,   
-        clientDiscord: client,
         prefix: "!",
         ExtDir: extPath,
     }
 
-    const ExtManager = new ExtensionManager(config);
-    ExtManager.init()
+    let ExtManager : ExtensionManager | undefined = undefined;
+    
     
     client.once(Events.ClientReady, () => {
         console.log(`Logged in as ${client.user?.tag}`);
+        ExtManager = new ExtensionManager(config);
+        ExtManager.init()
     });
 
     client.on(Events.MessageCreate, async (message: Message) => {
         try {
-            ExtManager.execute(message);    
+            ExtManager?.execute(message);    
         }  catch (error) {
             console.error(error);
         }
     });
 
 
-    client.login(token);
+    await client.login(token);
     
 
     
