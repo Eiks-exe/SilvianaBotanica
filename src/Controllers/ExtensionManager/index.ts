@@ -29,6 +29,11 @@ interface Iconfig {
     ExtDir: string;
 }
 
+interface slashCommand {
+    name: string;
+    description:string;
+}
+
 class ExtensionManager {
     commands: ICommand[];
     extensions: IExtension<ICommand>[]; 
@@ -76,24 +81,18 @@ class ExtensionManager {
         });
         this.LoadSlashCommands();
     };
-    
+  
     private  LoadSlashCommands = async () => {
         console.log("Loading slash commands...");
         const rest = new REST({ version: '10' }).setToken(this.config.token);
         const slashCommands = this.commands.filter((command) => command.types.includes("SLASH"));
+        const commandsArray : slashCommand[]  = [];
         slashCommands.forEach(async (command) => {
             const  newCommand = {name: command.id, description: command.description};
-            try {
-                console.log(`Attempting to register command ${command.id}`);
-                await rest.put(
-                    Routes.applicationCommands(this.clientDiscord.user?.id as string),
-                    { body: newCommand },
-                ).then((res)=>{console.log(res)});
-                console.log(`Command ${command.id} registered as a (/) command`);
-            } catch (error) {
-                console.error(error);
-            }
+            commandsArray.push(newCommand);
         });
+        await rest.put(Routes.applicationCommands(this.clientDiscord.user?.id as string), { body: commandsArray });
+         
         console.log("Slash commands loaded", slashCommands);
     }
 
@@ -101,10 +100,11 @@ class ExtensionManager {
         try {
             if (message.author.bot) return;
             if (!message.content.startsWith(this.config.prefix)) return;
-            const [command, ...args] = message.content.slice(this.config.prefix.length).split(" ");
-            this.commands.filter((cmd) => cmd.id === command).forEach((cmd) => {
-                cmd.execute(message, args);
-            });
+            const [prefix, command, ...args] = message.content.slice(this.config.prefix.length).split(" ");
+            console.log("command requested", prefix , command, args);
+            const cmd : ICommand | undefined = this.commands.find((cmd) => cmd.id === command);
+            if (!cmd) return;
+            cmd.execute(message, args);
         }  catch (error) {
             throw new Error((error as Error).message);
         }
@@ -114,9 +114,9 @@ class ExtensionManager {
         try {
             if (!interaction.isCommand()) return;
             console.log("command requested", interaction.commandName);
-            this.commands.filter((command) => command.id === interaction.commandName).forEach((command) => {
-                command.execute(interaction);
-            });
+            const cmd : ICommand | undefined = this.commands.find((cmd) => cmd.id === interaction.commandName);
+            if (!cmd) return;
+            cmd.execute(interaction);
         }  catch (error) {
             throw new Error((error as Error).message);
         }

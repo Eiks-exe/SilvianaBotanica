@@ -49,6 +49,15 @@ dotenv.config();
         }
     });
 
+    client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+        console.log(`Interaction received: ${interaction}`);
+        try {
+            ExtManager?.executeSlash(interaction);
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
 
     await client.login(token);
     
