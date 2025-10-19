@@ -1,12 +1,14 @@
-import { Client, GatewayIntentBits, IntentsBitField } from "discord.js"
+import { Client, GatewayIntentBits, GuildMember, IntentsBitField } from "discord.js"
 import * as dotenv from 'dotenv'
 import Controller from "./Controllers/CommandController"
 import { readdirSync } from "fs"
 import { ICommand } from "./Interfaces/commands"
+import { onVoiceStateUpdate } from "./tableManager"
 
 dotenv.config()
 
 const main = async (): Promise<void> => {
+
     let controller: Controller<ICommand> | undefined
     const myIntents = new IntentsBitField();
     myIntents.add(
@@ -14,9 +16,9 @@ const main = async (): Promise<void> => {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates
         );
     const client = new Client({ intents: myIntents })
-    
     client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
         controller = client?.user?.id ? new Controller(client, client.user.id) : undefined;
@@ -24,7 +26,6 @@ const main = async (): Promise<void> => {
         extensionFile.forEach(async  (file) => {
             const extension = await import(`./Extensions/${file.name}`)
             controller?.Plug(extension.default)
-            console.log(extension)    
         })
 
     })
@@ -34,9 +35,21 @@ const main = async (): Promise<void> => {
     })
 
     client.on('interactionCreate', async interaction => {
-        if (!interaction.isChatInputCommand()) return;
+      if (interaction.isChatInputCommand()) {
         controller?.executeSlash(interaction)
-     })
+      } else if (interaction.isButton() && !interaction.isModalSubmit() && !interaction.isUserSelectMenu()){
+        switch(interaction.customId){
+          case 'invite_guest':
+            return console.log("invite guest requested")
+        }
+      }
+    })
+    
+    client.on('voiceStateUpdate', async (oldState, newState) => {
+      console.log("voiceStateUpdate")
+      onVoiceStateUpdate(oldState,newState);
+    })
+
 
     client.login(process.env.TOKEN)
 }

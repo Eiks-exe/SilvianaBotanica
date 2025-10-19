@@ -1,12 +1,16 @@
 import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "../extensionModel";
-import { ChannelType, GuildChannelCreateOptions, Interaction } from "discord.js";
+import { ChannelType, GuildChannelCreateOptions, Interaction, VoiceChannel } from "discord.js";
 import { randomInt } from "crypto";
 
-type EventType = Interaction;
+interface VoiceChannelConfig {
+  author: string,
+  name: string,
+  user_limit?: number,
+  private: boolean
+};
 
-
-const create = (event: Interaction, query:[])=>{
+const text_channel_create = (event: Interaction, query:[])=>{
    if(!event.isCommand()) return;
     const channelName = event.options.get("name")?.value?.toString()
     const usersID = event.options.get("users")?.user?.id
@@ -35,11 +39,21 @@ const create = (event: Interaction, query:[])=>{
     event.guild?.channels.create(options)
 }
 
+const defaultVoiceChannelConfig: VoiceChannelConfig = {
+  author : "unknown",
+  name : "new table",
+  private: false
+};
 
-const Info: ExtensionModel<ICommand> = {
+const voice_channel_create = (config: Partial<VoiceChannelConfig>) => {
+  const finalConfig = {...defaultVoiceChannelConfig, config}
+  console.log(finalConfig)
+};
+
+const Channel: ExtensionModel<ICommand> = {
     name: "Channel",
     commands: {
-        ping: {id : "channel-create", description: "create a channel", types: ["CHAT", "SLASH"], method: create, options: [
+        textChannelCreate: {id : "channel-create", description: "create a text channel", types: ["CHAT", "SLASH"], method: text_channel_create, options: [
             {
                 name: "name",
                 description: "The name of the channel",
@@ -50,8 +64,10 @@ const Info: ExtensionModel<ICommand> = {
                 description: "The users to give access to the channel",
                 type: 6,
             },
-        ]}
+        ]},
+        VoiceChannelCreate: {id: "voice_channel_create", description: "create a voice channel", types: ["CHAT"], method: voice_channel_create}, 
+        
     }
 }
 
-export default Info
+export default Channel
