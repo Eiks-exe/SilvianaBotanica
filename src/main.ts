@@ -1,9 +1,10 @@
-import { Client, GatewayIntentBits, GuildMember, IntentsBitField } from "discord.js"
+import { Client, GatewayIntentBits, IntentsBitField } from "discord.js"
 import * as dotenv from 'dotenv'
 import Controller from "./Controllers/CommandController"
 import { readdirSync } from "fs"
 import { ICommand } from "./Interfaces/commands"
-import { onVoiceStateUpdate } from "./tableManager"
+import { onVoiceStateUpdate } from "./Controllers/TableController"
+import { handleInviteGuestInteraction, inviteGuestMenuInteraction } from "./Controllers/TableController/tableManager"
 
 dotenv.config()
 
@@ -39,12 +40,16 @@ const main = async (): Promise<void> => {
         controller?.executeSlash(interaction)
       } else if (interaction.isButton() && !interaction.isModalSubmit() && !interaction.isUserSelectMenu()){
         switch(interaction.customId){
-          case 'invite_guest':
-            return console.log("invite guest requested")
+          case 'invite_guests':
+            return handleInviteGuestInteraction(interaction)
         }
+      } else if (interaction.isUserSelectMenu() && interaction.customId == "select_guest") {
+        console.log("usermenu")
+        inviteGuestMenuInteraction(interaction);
       }
     })
     
+
     client.on('voiceStateUpdate', async (oldState, newState) => {
       console.log("voiceStateUpdate")
       onVoiceStateUpdate(oldState,newState);

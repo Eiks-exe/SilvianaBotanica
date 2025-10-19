@@ -20,7 +20,6 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
   if (newState.channelId === RECEPTION_CHANNEL_ID && oldState.channelId !== RECEPTION_CHANNEL_ID) {
     const member = newState.member;
     if (!member) return;
-    console.log(member)
     const guild = newState.guild;
     const tableCategory = guild.channels.cache.get(TABLE_CATEGORY_ID) as CategoryChannel;
 
@@ -35,7 +34,7 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
 
     // Create the private table (voice channel)
     const tableChannel = await guild.channels.create({
-      name: `{member.user.username.toLowerCase()}'s table`,
+      name: `${member.user.username.toLowerCase()}'s table`,
       type: ChannelType.GuildVoice,
       parent: TABLE_CATEGORY_ID,
       permissionOverwrites: [
@@ -75,8 +74,7 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
     // Optional: Notify them in DM or in a log channel
     try {
       tableChannel.send({
-        content: `🍽️ Your table has been prepared: **${tableChannel.name}**. /n You can invite your guests by tagging them or sharing this channel link. /n
-        Our staff will handle the rest. Enjoy your stay. `,
+        content: `🍽️ Your table has been prepared: **${tableChannel.name}**. \n You can invite your guests by tagging them or sharing this channel link.\n Our staff will handle the rest. Enjoy your stay. `,
         components: [row]
       });
     } catch {
