@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonInteraction, ChannelType, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js";
+import { ActionRowBuilder, ButtonInteraction, ChannelType, ModalBuilder, TextInputBuilder, UserSelectMenuBuilder, UserSelectMenuInteraction, StringSelectMenuBuilder, SelectMenuBuilder, VoiceChannel, StringSelectMenuInteraction } from "discord.js";
 
 export const handleInviteGuestInteraction = async (interaction: ButtonInteraction) => {
   const selectMenu = new UserSelectMenuBuilder()
@@ -19,7 +19,6 @@ export const handleInviteGuestInteraction = async (interaction: ButtonInteractio
 export const inviteGuestMenuInteraction = async (interaction: UserSelectMenuInteraction) => {
   const selectedUsers = interaction.values;
   const voiceChannel = interaction.channel
-  console.log("selectmenuinteraction") 
   for (const id of selectedUsers) {
     const member = await interaction.guild?.members.fetch(id);
     if (member && voiceChannel) {
@@ -37,4 +36,105 @@ export const inviteGuestMenuInteraction = async (interaction: UserSelectMenuInte
     content: `✅ Invited ${selectedUsers.length} guest(s) to your table.`,
     ephemeral: true
   })
+}
+
+export const tableSettingsInteraction = async (interaction: ButtonInteraction) => {
+  const settingsUserLimit = new StringSelectMenuBuilder()
+    .setCustomId('user_limit_select')
+    .setPlaceholder('number of seat')
+    .addOptions([
+      {
+        label: "2",
+        value:"2"
+      },
+      {
+        label: "4",
+        value: "4"
+      },
+      {
+        label: "6",
+        value: "6"
+      }
+    ])
+    .setMinValues(0)
+    .setMaxValues(1)
+
+    
+  const settingsActionRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(settingsUserLimit);
+  
+  
+  await interaction.reply({
+    content: 'would you like to adjust your seats ?',
+    components: [settingsActionRow], 
+    ephemeral: true
+  });
+
+}
+
+export const setPrivacyInteraction = (interaction: ButtonInteraction) => {
+
+  const select = new StringSelectMenuBuilder()
+    .setCustomId("privacy_settings")
+    .setPlaceholder("visibility")
+    .addOptions([
+      {
+        label: "Private table",
+        description: "Only invited guest can see and/or join your table",
+        value: "private",
+      },
+      {
+        label: "Public table",
+        description: "Anyone can see and/or join your table",
+        value: "public",
+      }
+    ])
+    .setMinValues(0)
+    .setMaxValues(1)
+  
+  const privacyRow = new ActionRowBuilder<SelectMenuBuilder>().addComponents(select);
+  interaction.reply({
+    content: "set your table accessibility",
+    components: [privacyRow],
+    ephemeral: true
+  })
+}
+
+
+export const setUserLimit = (interaction : StringSelectMenuInteraction) => {
+  const voiceChannel = interaction.channel
+  if(voiceChannel?.type !== ChannelType.GuildVoice) return;
+  console.log(parseInt(interaction.values[0]))
+  voiceChannel.setUserLimit(parseInt(interaction.values[0]))
+  interaction.reply({
+    content:`you table as know ${interaction.values[0]}`,
+    ephemeral: true
+  })
+}
+
+export const setTablePrivacy = (interaction:StringSelectMenuInteraction) =>{
+  const voiceChannel = interaction.channel
+  const privacyValue = interaction.values[0]
+
+  if(voiceChannel?.type !== ChannelType.GuildVoice) return;
+  const makePrivate = (interaction: StringSelectMenuInteraction) => {
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, {
+      Connect: false,
+      ViewChannel: false
+    }) 
+    interaction.reply("your table is now private")
+  }
+
+  const makePublic = (interaction: StringSelectMenuInteraction) => {
+      voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, {
+        Connect: true,
+        ViewChannel: true
+      })
+      interaction.reply("your table is now public")
+  }
+  switch (privacyValue) {
+    case 'private':
+      return makePrivate(interaction)
+    case 'public':
+      return makePublic(interaction)
+  } 
 }

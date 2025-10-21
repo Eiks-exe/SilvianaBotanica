@@ -5,7 +5,8 @@ import {
   CategoryChannel,
   ButtonBuilder,
   ButtonStyle,
-  ActionRowBuilder
+  ActionRowBuilder,
+  StringSelectMenuInteraction
 } from "discord.js";
 
 
@@ -13,7 +14,6 @@ import {
 export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
   const RECEPTION_CHANNEL_ID = process.env.HOST_VC_ID; // Reception voice channel
   const TABLE_CATEGORY_ID = process.env.TABLE_CATEGORY_ID;   // Category for tables
-  console.log("called", RECEPTION_CHANNEL_ID, TABLE_CATEGORY_ID)
 
   // Trigger only when user joins the Reception channel
   if(!RECEPTION_CHANNEL_ID || !TABLE_CATEGORY_ID) return;
@@ -67,8 +67,8 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
        .setLabel('Adjust Seats')
        .setStyle(ButtonStyle.Secondary), 
       new ButtonBuilder()
-       .setCustomId('close_table')
-       .setLabel('Close Table')
+       .setCustomId('privacy')
+       .setLabel('Accessibility')
        .setStyle(ButtonStyle.Danger)
   );
     // Optional: Notify them in DM or in a log channel
@@ -91,3 +91,4 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
     await oldState.channel.delete("Table empty — auto-cleanup");
   }
 }
+
