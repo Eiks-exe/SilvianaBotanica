@@ -63,6 +63,7 @@ const main = async (): Promise<void> => {
     
 
     client.on('voiceStateUpdate', async (oldState, newState) => {
+      console.log("voiceStateUpdate")
       onVoiceStateUpdate(oldState,newState);
     })
 
