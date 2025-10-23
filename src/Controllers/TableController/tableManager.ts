@@ -1,11 +1,12 @@
 import { ActionRowBuilder, ButtonInteraction, ChannelType, ModalBuilder, TextInputBuilder, UserSelectMenuBuilder, UserSelectMenuInteraction, StringSelectMenuBuilder, SelectMenuBuilder, VoiceChannel, StringSelectMenuInteraction } from "discord.js";
+import Channel from "src/Extensions/Channel";
 
 export const handleInviteGuestInteraction = async (interaction: ButtonInteraction) => {
   const selectMenu = new UserSelectMenuBuilder()
     .setCustomId('select_guest')
     .setPlaceholder('Select guest to invite')
     .setMinValues(1)
-    .setMaxValues(5)
+.setMaxValues(5)
   
   const selectMenuRow = new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(selectMenu);
   
@@ -19,16 +20,24 @@ export const handleInviteGuestInteraction = async (interaction: ButtonInteractio
 export const inviteGuestMenuInteraction = async (interaction: UserSelectMenuInteraction) => {
   const selectedUsers = interaction.values;
   const voiceChannel = interaction.channel
+  
+  if(voiceChannel?.type !== ChannelType.GuildVoice) return;
+  
+  const invite = await voiceChannel.createInvite({
+    maxAge: 3600, // 1 hour
+    maxUses: 5,
+    unique: true,
+    reason: `${interaction.user.username} reserved a table.`,
+  });
   for (const id of selectedUsers) {
     const member = await interaction.guild?.members.fetch(id);
     if (member && voiceChannel) {
       console.log(member)
-      if(voiceChannel.type !== ChannelType.GuildVoice) return;
       voiceChannel.permissionOverwrites.edit(member, {
         Connect: true,
         ViewChannel: true, 
       })
-      member.send(`you've been invited to ${voiceChannel.name}`)
+      member.send(`you've been invited to ${voiceChannel.name}: \n ${invite}`)
     }
   }
 
@@ -137,4 +146,11 @@ export const setTablePrivacy = (interaction:StringSelectMenuInteraction) =>{
     case 'public':
       return makePublic(interaction)
   } 
+}
+
+export const closeTableInteraction = (interaction: ButtonInteraction) => {
+  const voiceChannel = interaction.channel
+
+  if (voiceChannel?.type !== ChannelType.GuildVoice) return;
+  voiceChannel.delete()
 }

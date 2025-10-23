@@ -4,7 +4,7 @@ import Controller from "./Controllers/CommandController"
 import { readdirSync } from "fs"
 import { ICommand } from "./Interfaces/commands"
 import { onVoiceStateUpdate } from "./Controllers/TableController"
-import { handleInviteGuestInteraction, inviteGuestMenuInteraction, setTablePrivacy, setUserLimit, tableSettingsInteraction, setPrivacyInteraction } from "./Controllers/TableController/tableManager"
+import { handleInviteGuestInteraction, inviteGuestMenuInteraction, setTablePrivacy, setUserLimit, tableSettingsInteraction, setPrivacyInteraction, closeTableInteraction } from "./Controllers/TableController/tableManager"
 
 dotenv.config()
 
@@ -46,6 +46,8 @@ const main = async (): Promise<void> => {
             return tableSettingsInteraction(interaction)
           case 'privacy':
             return setPrivacyInteraction(interaction)
+          case 'close_table':
+            return closeTableInteraction(interaction)
         }
       } else if (interaction.isUserSelectMenu() && interaction.customId == "select_guest") {
         console.log("usermenu")

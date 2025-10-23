@@ -59,17 +59,21 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
       new ButtonBuilder()
-       .setCustomId('invite_guests')
-       .setLabel('Invite Guests')
-       .setStyle(ButtonStyle.Primary),
+        .setCustomId('invite_guests')
+        .setLabel('Invite Guests')
+        .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-       .setCustomId('adjust_seats')
-       .setLabel('Adjust Seats')
-       .setStyle(ButtonStyle.Secondary), 
+        .setCustomId('adjust_seats')
+        .setLabel('Adjust Seats')
+        .setStyle(ButtonStyle.Secondary), 
       new ButtonBuilder()
-       .setCustomId('privacy')
-       .setLabel('Accessibility')
-       .setStyle(ButtonStyle.Danger)
+        .setCustomId('privacy')
+        .setLabel('Accessibility')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('close_table')
+        .setLabel('Close')
+        .setStyle(ButtonStyle.Danger)
   );
     // Optional: Notify them in DM or in a log channel
     try {
