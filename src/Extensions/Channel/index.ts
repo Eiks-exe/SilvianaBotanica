@@ -2,6 +2,7 @@ import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "../extensionModel";
 import { ChannelType, GuildChannelCreateOptions, Interaction, VoiceChannel } from "discord.js";
 import { randomInt } from "crypto";
+import { createHostVc, getHostChannelForGuild } from "src/Controllers/VoiceController";
 
 interface VoiceChannelConfig {
   author: string,
@@ -50,6 +51,23 @@ const voice_channel_create = (config: Partial<VoiceChannelConfig>) => {
   console.log(finalConfig)
 };
 
+const create_host_voice_channel = async (event: Interaction) => {
+  if (!event.isCommand()) return;
+  if (!event.guild) return;
+  const existingHostVc = await getHostChannelForGuild(event.guild?.id);
+  if(existingHostVc){
+    event.reply("a host channel already exist on this server")
+    return;
+  }
+
+  const channelName = event.options.get("name")?.value?.toString()
+  if (!channelName) return;
+  const options : GuildChannelCreateOptions = {
+    name: channelName,
+    type: ChannelType.GuildVoice
+  }
+  createHostVc(event.guild, options); 
+};
 const Channel: ExtensionModel<ICommand> = {
     name: "Channel",
     commands: {
@@ -66,7 +84,7 @@ const Channel: ExtensionModel<ICommand> = {
             },
         ]},
         VoiceChannelCreate: {id: "voice_channel_create", description: "create a voice channel", types: ["CHAT"], method: voice_channel_create}, 
-        
+        HostChannelCreate: {id: "setup_host_channel", description: "create a host channel", types: ["SLASH"], method: create_host_voice_channel} 
     }
 }
 
