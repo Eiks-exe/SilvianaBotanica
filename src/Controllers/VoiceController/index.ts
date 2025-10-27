@@ -1,5 +1,5 @@
 import { Guild, GuildChannelCreateOptions } from "discord.js";
-import { getDB } from "src/utils/database";
+import { getDB } from "../../utils/database";
 
 
 export const createHostVc = async (guild: Guild, options : GuildChannelCreateOptions) => {

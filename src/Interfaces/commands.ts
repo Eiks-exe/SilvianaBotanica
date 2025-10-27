@@ -1,3 +1,4 @@
+import { ApplicationCommandOptionType } from "discord.js"
 type CommandType = "CHAT" | "SLASH" | "MESSAGE" | "REACTION" | "INTERACTION"
 
 type optionType = "SUB_COMMAND" | "SUB_COMMAND_GROUP" | "STRING" | "INTEGER" | "BOOLEAN" | "USER" | "CHANNEL" | "ROLE" | "MENTIONABLE" | "NUMBER"
@@ -15,7 +16,7 @@ export interface ICommand {
 export interface commandOption {
     name: string
     description: string
-    type: number
+    type: ApplicationCommandOptionType
     required?: boolean
     choices?: []
     options?: []

@@ -8,6 +8,7 @@ import {
     Routes,
     Interaction, 
 } from "discord.js";
+import { buildSlashCommand } from "../../utils/buildSlashCommand";
 
 interface IController<T extends ICommand> {
     Plug(extension: ExtensionModel<T>): void;
@@ -64,6 +65,7 @@ export default class Controller<T extends ICommand> implements IController<T> {
      * @param {ExtensionModel<T>} extension - The extension to plug.
      */
     public Plug(extension: ExtensionModel<ICommand>): void {
+        console.log(`plugin ${extension.name}`)
         const token = process.env.TOKEN;
         if(token === undefined) throw new Error("TOKEN is undefined")
         const rest = new REST({ version: '10' }).setToken(token);
@@ -77,9 +79,8 @@ export default class Controller<T extends ICommand> implements IController<T> {
         
         if (this.client.user?.id === undefined) throw new Error("client.user.id is undefined")
         const slashCommands = this.commands.filter((command: ICommand) => command.types.includes("SLASH"))
-        const slashCommandBody = slashCommands.map((command : ICommand ) => {
-            return { name : command.id, description: command.description, options: command.options ? command.options : []}
-        })
+        const slashCommandBody = slashCommands.map((command : ICommand ) => buildSlashCommand(command).toJSON() )
+        
         rest.put(Routes.applicationCommands(this.client.user?.id), { body: slashCommandBody })
             .then(() => {
                 this.collectExtension(extension)

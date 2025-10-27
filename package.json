@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.15.11",
+    "discord": "^0.8.2",
     "discord.js": "^14.8.0",
     "dotenv": "^16.6.1",
     "sqlite": "^5.1.1",

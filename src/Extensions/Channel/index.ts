@@ -2,7 +2,8 @@ import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "../extensionModel";
 import { ChannelType, GuildChannelCreateOptions, Interaction, VoiceChannel } from "discord.js";
 import { randomInt } from "crypto";
-import { createHostVc, getHostChannelForGuild } from "src/Controllers/VoiceController";
+import { createHostVc, getHostChannelForGuild } from "../../Controllers/VoiceController";
+import { win32 } from "path";
 
 interface VoiceChannelConfig {
   author: string,
@@ -71,7 +72,7 @@ const create_host_voice_channel = async (event: Interaction) => {
 const Channel: ExtensionModel<ICommand> = {
     name: "Channel",
     commands: {
-        textChannelCreate: {id : "channel-create", description: "create a text channel", types: ["CHAT", "SLASH"], method: text_channel_create, options: [
+        textChannelCreate: {id : "channel-create", description: "create a private text channel", types: ["CHAT", "SLASH"], method: text_channel_create, options: [
             {
                 name: "name",
                 description: "The name of the channel",
@@ -84,7 +85,14 @@ const Channel: ExtensionModel<ICommand> = {
             },
         ]},
         VoiceChannelCreate: {id: "voice_channel_create", description: "create a voice channel", types: ["CHAT"], method: voice_channel_create}, 
-        HostChannelCreate: {id: "setup_host_channel", description: "create a host channel", types: ["SLASH"], method: create_host_voice_channel} 
+        HostChannelCreate: {id: "setup_host_channel", description: "create a host channel", types: ["SLASH"], method: create_host_voice_channel, options: [
+          {
+            name:"name",
+            description: "name the host channel",
+            type:3,
+            required: true 
+          }
+        ]} 
     }
 }
 
