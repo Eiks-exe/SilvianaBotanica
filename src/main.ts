@@ -5,6 +5,7 @@ import { readdirSync } from "fs"
 import { ICommand } from "./Interfaces/commands"
 import { onVoiceStateUpdate } from "./Controllers/TableController"
 import { handleInviteGuestInteraction, inviteGuestMenuInteraction, setTablePrivacy, setUserLimit, tableSettingsInteraction, setPrivacyInteraction, closeTableInteraction } from "./Controllers/TableController/tableManager"
+import { initDB } from "./utils/database"
 
 dotenv.config()
 
@@ -20,6 +21,8 @@ const main = async (): Promise<void> => {
         GatewayIntentBits.GuildVoiceStates
         );
     const client = new Client({ intents: myIntents })
+    await initDB();
+    console.log("database initialized.")
     client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
         controller = client?.user?.id ? new Controller(client, client.user.id) : undefined;

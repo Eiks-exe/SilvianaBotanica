@@ -6,22 +6,26 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
-  StringSelectMenuInteraction
 } from "discord.js";
+import { getHostChannelForGuild, getTableCategoryId_byGuildId } from "../VoiceController";
+import { getDB } from "../../utils/database";
 
 
 
 export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
-  const RECEPTION_CHANNEL_ID = process.env.HOST_VC_ID; // Reception voice channel
-  const TABLE_CATEGORY_ID = process.env.TABLE_CATEGORY_ID;   // Category for tables
+  const guild = newState.guild
+  const hostdb = await getHostChannelForGuild(guild.id);
+  if(!hostdb) return; 
+  const host_channel = guild.channels.cache.get(hostdb.channel_id)
+  const RECEPTION_CHANNEL_ID =  hostdb?.channel_id;// Reception voice channel
+  const TABLE_CATEGORY_ID = await getTableCategoryId_byGuildId(guild.id);   // Category for tables
 
   // Trigger only when user joins the Reception channel
-  if(!RECEPTION_CHANNEL_ID || !TABLE_CATEGORY_ID) return;
+  if(!RECEPTION_CHANNEL_ID) return;
   if (newState.channelId === RECEPTION_CHANNEL_ID && oldState.channelId !== RECEPTION_CHANNEL_ID) {
     const member = newState.member;
     if (!member) return;
-    const guild = newState.guild;
-    const tableCategory = guild.channels.cache.get(TABLE_CATEGORY_ID) as CategoryChannel;
+    const tableCategory = TABLE_CATEGORY_ID ? guild.channels.cache.get(TABLE_CATEGORY_ID) as CategoryChannel : host_channel?.parent as CategoryChannel;
 
     // Prevent duplicate table creation
     const existingTable = tableCategory.children.cache.find(

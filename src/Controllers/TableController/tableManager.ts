@@ -1,5 +1,4 @@
 import { ActionRowBuilder, ButtonInteraction, ChannelType, ModalBuilder, TextInputBuilder, UserSelectMenuBuilder, UserSelectMenuInteraction, StringSelectMenuBuilder, SelectMenuBuilder, VoiceChannel, StringSelectMenuInteraction } from "discord.js";
-import Channel from "src/Extensions/Channel";
 
 export const handleInviteGuestInteraction = async (interaction: ButtonInteraction) => {
   const selectMenu = new UserSelectMenuBuilder()
