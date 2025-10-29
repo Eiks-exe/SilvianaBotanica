@@ -5,15 +5,16 @@ import { getDB } from "../../utils/database";
 export const createHostVc = async (guild: Guild, options : GuildChannelCreateOptions, category?: string) => {
   const db = getDB();
   const hostVoiceChannel = await guild.channels.create(options);
-  const parentCategory = category ? await createTableCategory(guild, category) : undefined;
+  const parentCategory = category ? await createTableCategory(guild, category) : null;
+  const parentCategoryId = parentCategory?.id; 
 
   db.run(
-    `INSERT INTO host_channels (guild_id, channel_id, channel_name, owner_id, parent_category_id) VALUES (?, ?, ?, ?)`,
+    `INSERT INTO host_channels (guild_id, channel_id, channel_name, owner_id, parent_category_id) VALUES (?, ?, ?, ?,?)`,
     guild.id,
     hostVoiceChannel.id,
     hostVoiceChannel.name,
     guild.ownerId,
-    parentCategory ? parentCategory.id : null
+    parentCategoryId
   );
 
   return hostVoiceChannel;
@@ -56,4 +57,11 @@ export const getTableCategoryId_byGuildId = async (guildId: string) => {
   const db = getDB();
   const categoryId = await db.get<string>(`SELECT parent_category_id FROM host_channels WHERE guild_id = ? LIMIT 1`, guildId);
   return categoryId 
+}
+
+export const resetGuildHost = async (guildId: string) => {
+  const db = getDB();
+  const result = await db.run(`DELETE FROM host_channels WHERE guild_id = ?`, guildId)
+  console.log(`deleted ${result.changes} row for guild ${guildId}`)
+  return result.changes; 
 }

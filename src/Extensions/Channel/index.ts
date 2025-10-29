@@ -1,9 +1,8 @@
 import { ICommand } from "src/Interfaces/commands";
 import { ExtensionModel } from "../extensionModel";
-import { ChannelType, GuildChannelCreateOptions, Interaction, VoiceChannel } from "discord.js";
+import { ChannelType, GuildChannelCreateOptions, Interaction } from "discord.js";
 import { randomInt } from "crypto";
-import { createHostVc, getHostChannelForGuild } from "../../Controllers/VoiceController";
-import { win32 } from "path";
+import { createHostVc, getHostChannelForGuild, resetGuildHost } from "../../Controllers/VoiceController";
 
 interface VoiceChannelConfig {
   author: string,
@@ -67,8 +66,19 @@ const create_host_voice_channel = async (event: Interaction) => {
     name: channelName,
     type: ChannelType.GuildVoice
   }
-  createHostVc(event.guild, options); 
+  const parent_category = event.options.get("parent_category")?.value?.toString()
+  parent_category ? createHostVc(event.guild, options, parent_category) : createHostVc(event.guild, options); 
 };
+
+const reset_host_config = (event : Interaction) => {
+  if (!event.isCommand()) return;
+  if (!event.guild) return; 
+  resetGuildHost(event.guild?.id);
+  event.reply({
+    content: "reset done",
+    ephemeral: true
+  })
+}
 const Channel: ExtensionModel<ICommand> = {
     name: "Channel",
     commands: {
@@ -91,8 +101,14 @@ const Channel: ExtensionModel<ICommand> = {
             description: "name the host channel",
             type:3,
             required: true 
+          },
+          {
+            name: "parent_category",
+            description: "parents of the personal voice channels",
+            type: 3
           }
-        ]} 
+        ]},
+        resetGuildHost: {id: "reset_host_config", description: "remove the host channel from (only) the database ", types:["SLASH"], method:reset_host_config }
     }
 }
 

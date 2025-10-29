@@ -6,6 +6,8 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
+  VoiceChannel,
+  GuildBasedChannel,
 } from "discord.js";
 import { getHostChannelForGuild, getTableCategoryId_byGuildId } from "../VoiceController";
 import { getDB } from "../../utils/database";
@@ -25,12 +27,28 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
   if (newState.channelId === RECEPTION_CHANNEL_ID && oldState.channelId !== RECEPTION_CHANNEL_ID) {
     const member = newState.member;
     if (!member) return;
-    const tableCategory = TABLE_CATEGORY_ID ? guild.channels.cache.get(TABLE_CATEGORY_ID) as CategoryChannel : host_channel?.parent as CategoryChannel;
+    let tableCategory: CategoryChannel | null = null;
 
-    // Prevent duplicate table creation
-    const existingTable = tableCategory.children.cache.find(
-      c => c.name === `table-${member.user.username.toLowerCase()}`
-    );
+    if (TABLE_CATEGORY_ID) {
+      const fetched = guild.channels.cache.get(TABLE_CATEGORY_ID);
+      if(fetched && fetched.type === ChannelType.GuildCategory){
+        tableCategory = fetched as CategoryChannel;
+      }
+    } else if (host_channel?.parent && host_channel.parent.type === ChannelType.GuildCategory) {
+      tableCategory = host_channel.parent;
+    }
+    let existingTable : GuildBasedChannel | undefined = undefined;
+    if (!tableCategory) {
+      existingTable = guild.channels.cache.find(
+        c => c.name === `table-${member.user.username.toLowerCase()}` 
+      )
+      
+    } else if (tableCategory) {
+      existingTable = tableCategory.children.cache.find(
+        c => c.name === `table-${member.user.username.toLowerCase()}`
+      );
+    }    // Prevent duplicate table creaution
+
     if (existingTable) {
       await member.voice.setChannel(existingTable.id);
       return;
@@ -44,7 +62,7 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
       permissionOverwrites: [
         {
           id: guild.roles.everyone,
-          deny: [PermissionFlagsBits.Connect],
+          deny: [ PermissionFlagsBits.Connect],
         },
         {
           id: member.id,
