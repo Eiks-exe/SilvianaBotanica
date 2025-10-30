@@ -114,7 +114,7 @@ export const setUserLimit = (interaction : StringSelectMenuInteraction) => {
   console.log(parseInt(interaction.values[0]))
   voiceChannel.setUserLimit(parseInt(interaction.values[0]))
   interaction.reply({
-    content:`you table as know ${interaction.values[0]}`,
+    content:`you table as now ${interaction.values[0]} seats`,
     ephemeral: true
   })
 }

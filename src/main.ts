@@ -22,7 +22,6 @@ const main = async (): Promise<void> => {
         );
     const client = new Client({ intents: myIntents })
     await initDB();
-    console.log("database initialized.")
     client.on("ready", () => {
         console.log(`Logged in as ${client.user?.tag}!`);
         controller = client?.user?.id ? new Controller(client, client.user.id) : undefined;
@@ -53,12 +52,10 @@ const main = async (): Promise<void> => {
             return closeTableInteraction(interaction)
         }
       } else if (interaction.isUserSelectMenu() && interaction.customId == "select_guest") {
-        console.log("usermenu")
         inviteGuestMenuInteraction(interaction);
       } else if (interaction.isStringSelectMenu()) {
         switch(interaction.customId){
           case 'user_limit_select':
-            console.log("userlimitselectcalled")
             setUserLimit(interaction)
           case 'privacy_settings':
             setTablePrivacy(interaction)
@@ -68,7 +65,6 @@ const main = async (): Promise<void> => {
     
 
     client.on('voiceStateUpdate', async (oldState, newState) => {
-      console.log("voiceStateUpdate")
       onVoiceStateUpdate(oldState,newState);
     })
 

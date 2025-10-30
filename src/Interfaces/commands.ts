@@ -1,7 +1,8 @@
 import { ApplicationCommandOptionType } from "discord.js"
 type CommandType = "CHAT" | "SLASH" | "MESSAGE" | "REACTION" | "INTERACTION"
 
-type optionType = "SUB_COMMAND" | "SUB_COMMAND_GROUP" | "STRING" | "INTEGER" | "BOOLEAN" | "USER" | "CHANNEL" | "ROLE" | "MENTIONABLE" | "NUMBER"
+//type optionType = "SUB_COMMAND" | "SUB_COMMAND_GROUP" | "STRING" | "INTEGER" | "BOOLEAN" | "USER" | "CHANNEL" | "ROLE" | "MENTIONABLE" | "NUMBER"
+
 /**
  * The command interface.
  */
@@ -11,6 +12,8 @@ export interface ICommand {
     types: CommandType[]
     method: Function
     options?: commandOption[]
+    default_member_permision?: bigint[]
+    dm?: boolean
 }
 
 export interface commandOption {

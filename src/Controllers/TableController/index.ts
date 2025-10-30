@@ -6,21 +6,21 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
-  VoiceChannel,
   GuildBasedChannel,
 } from "discord.js";
 import { getHostChannelForGuild, getTableCategoryId_byGuildId } from "../VoiceController";
-import { getDB } from "../../utils/database";
-
 
 
 export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
+
+  let tableChannel : GuildBasedChannel | null  = null;
+  let TABLE_CATEGORY_ID: string | undefined = undefined;
   const guild = newState.guild
   const hostdb = await getHostChannelForGuild(guild.id);
   if(!hostdb) return; 
   const host_channel = guild.channels.cache.get(hostdb.channel_id)
-  const RECEPTION_CHANNEL_ID =  hostdb?.channel_id;// Reception voice channel
-  const TABLE_CATEGORY_ID = await getTableCategoryId_byGuildId(guild.id);   // Category for tables
+  const RECEPTION_CHANNEL_ID =  hostdb.channel_id;// Reception voice channel
+  TABLE_CATEGORY_ID = await getTableCategoryId_byGuildId(guild.id);   // Category for tables
 
   // Trigger only when user joins the Reception channel
   if(!RECEPTION_CHANNEL_ID) return;
@@ -34,8 +34,9 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
       if(fetched && fetched.type === ChannelType.GuildCategory){
         tableCategory = fetched as CategoryChannel;
       }
-    } else if (host_channel?.parent && host_channel.parent.type === ChannelType.GuildCategory) {
+    } else if (host_channel && host_channel?.parent && host_channel.parent.type === ChannelType.GuildCategory) {
       tableCategory = host_channel.parent;
+      TABLE_CATEGORY_ID = host_channel.parentId ? host_channel.parentId : undefined; 
     }
     let existingTable : GuildBasedChannel | undefined = undefined;
     if (!tableCategory) {
@@ -55,10 +56,10 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
     }
 
     // Create the private table (voice channel)
-    const tableChannel = await guild.channels.create({
+    tableChannel = await guild.channels.create({
       name: `${member.user.username.toLowerCase()}'s table`,
       type: ChannelType.GuildVoice,
-      parent: TABLE_CATEGORY_ID,
+      parent: tableCategory,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,
